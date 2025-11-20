@@ -18,8 +18,8 @@ public class Main {
         String text = load(path);
 
         WordCount[] strategies = {
-            new Serial()
-            //new ParallelCPUCounter(),
+            new Serial(),
+            new ParallelCPU(12)
             //new ParallelGPUCounter()
         };
 
