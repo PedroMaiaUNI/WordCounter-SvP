@@ -1,35 +1,51 @@
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.util.*;
 
-import algoritms.*;
 import base.*;
+import benchmark.*;
 
 public class Main {
+
+    static int[] threadConfigs = {2, 4, 8, 12, 20};
+    static int repetitions = 1;
 
     public static String load(String path) throws IOException {
         return new String(Files.readAllBytes(Paths.get(path)));
     }
     public static void main(String[] args) throws Exception {
+        
+        Config config = new Config.Builder()
+                .setDatasetFolder("data")
+                .setTargetWord("ah")
+                .setThreadCounts(threadConfigs)
+                .setRepetitions(repetitions)
+                .build();
 
-        String path = "data/Dracula-165307.txt";
-        String word = "blood";
+        Runner runner = new Runner(config);
 
-        String text = load(path);
+        runner.runAll();
 
-        WordCount[] strategies = {
-            new Serial(),
-            new ParallelCPU(12)
-            //new ParallelGPUCounter()
-        };
+        terminalOutput(runner.getResults());
+        csvOutput(runner);
+        
+    }
 
-        for (WordCount s : strategies) {
-            long start = System.currentTimeMillis();
-            int count = s.countTotal(text, word);
-            long end = System.currentTimeMillis();
+    public static void terminalOutput(List<Result> results){
+        System.out.println("\n========== RESULTADOS ==========\n");
 
-            System.out.println(s.getName() + ": " + count + " ocorrências em " + (end - start) + " ms");
-        }
+        results.forEach(r -> System.out.printf(
+                "%s | arquivo=%s | threads=%d | ocorrências=%d | tempo=%d ms%n",
+                r.algorithm,
+                r.filename,
+                r.threads,
+                r.occurrences,
+                r.timeMs
+        ));
+    }
+
+    public static void csvOutput(Runner runner){
+        runner.exportResults("results/benchmark.csv");
     }
 }
 
